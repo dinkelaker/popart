@@ -1,0 +1,10 @@
+package de.tud.stg.tests.popart.extensions.coolcaching;
+
+per_class_cachingcoordinator BinomialVictim, {
+
+  selfex { calc }
+
+  memoize ("fac") {
+    untilCalling("clear");
+  }
+}

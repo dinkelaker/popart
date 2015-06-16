@@ -1,0 +1,6 @@
+package de.tud.stg.tests.popart.extensions.zip;
+
+zip ArgAndResultVictim, {
+  compress_args (["comp"])
+  decompress_args (["dcmp"])
+}

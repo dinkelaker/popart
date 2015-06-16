@@ -1,0 +1,20 @@
+package de.tud.stg.tests.popart.extensions.coolcaching;
+
+per_class_cachingcoordinator GuardedCacheVictim, {
+  
+  condition canRun:true;
+  
+  guard { doingSth } {
+    requires { canRun }
+    on_entry {
+      canRun = false;
+    }
+    on_exit {
+      canRun = true;
+    }
+  }
+  
+  memoize ("internal") {
+    untilAssigning("resetTrigger");
+  }
+}

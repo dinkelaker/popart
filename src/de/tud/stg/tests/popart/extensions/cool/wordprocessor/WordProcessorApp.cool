@@ -1,0 +1,14 @@
+/**
+ * @author Oliver Rehor
+ **/
+package de.tud.stg.tests.popart.extensions.cool.wordprocessor;
+
+per_class_coordinator ([Document]) {
+  selfex (["addLine.*", "setContent.*"]);
+  mutex  (["addLine.*", "setContent.*"]);
+
+  mutex  (["addLine.*", "getContent.*"]);
+  mutex  (["addLine.*", "wordCount.*"]);
+  mutex  (["setContent.*", "getContent.*"]);
+  mutex  (["setContent.*", "wordCount.*"]);
+}

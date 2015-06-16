@@ -1,0 +1,7 @@
+package de.tud.stg.tests.popart.extensions.cool.guard;
+
+per_class_coordinator ([StateInspectorVictim]) {
+  guard (["doSth"]) {
+    requires { mState != 0 }
+  }
+}

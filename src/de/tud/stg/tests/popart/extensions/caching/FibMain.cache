@@ -1,0 +1,5 @@
+package de.tud.stg.tests.popart.extensions.caching;
+
+per_class_cache (FibMain) {
+  memoize("fibCached") {}
+}

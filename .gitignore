@@ -1,0 +1,4 @@
+bin/
+*.log
+.svn/
+testdb/

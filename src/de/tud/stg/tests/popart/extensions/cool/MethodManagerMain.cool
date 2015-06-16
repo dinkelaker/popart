@@ -1,0 +1,28 @@
+package de.tud.stg.tests.popart.extensions.cool;
+
+/**
+ * @author Oliver Rehor
+ **/
+per_class_coordinator ([Book]) {
+  
+  selfex (["changeTitle.*"]);
+  
+  condition (varName1:false, varName2:true);
+  var (varName3:[int, 0]);
+  
+  // this should result in a "blocked-forever" thread:
+  methodManager (["changeTitle.*"], { 
+    requires { !varName1 && varName2 }; 
+    on_entry {
+      if (!varName1)
+        varName3 = 100;
+    }
+    on_exit {
+     if (varName2)
+       varName3 = 200;
+     else
+       varName3 = 300;
+     varName2 = !varName2;
+    }
+  });
+}

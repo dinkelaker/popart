@@ -1,0 +1,5 @@
+package de.tud.stg.tests.popart.extensions.caching.fib;
+
+per_class_cache (Fibonacci) {
+  memoize("fibCachedPC") {}
+}

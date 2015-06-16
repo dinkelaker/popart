@@ -1,0 +1,6 @@
+package de.tud.stg.tests.popart.extensions.cool.selfex;
+
+per_class_coordinator ([Book]) {
+  mutex (["addPage", "deletePage"]);
+  //mutex { addPage; deletePage }
+}

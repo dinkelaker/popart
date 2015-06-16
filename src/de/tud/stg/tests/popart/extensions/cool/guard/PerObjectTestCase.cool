@@ -1,0 +1,16 @@
+package de.tud.stg.tests.popart.extensions.cool.guard;
+
+coordinator ([PerObjectVictim]) {
+
+  condition cv:false;
+  
+  guard (["change_Title"]) { 
+    requires { cv }
+  }
+  
+  guard (["get_Title"]) { 
+    on_exit {
+      cv = true;
+    }
+  }
+}

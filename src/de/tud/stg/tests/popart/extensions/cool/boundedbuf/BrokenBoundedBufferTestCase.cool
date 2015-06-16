@@ -1,0 +1,32 @@
+package de.tud.stg.tests.popart.extensions.cool.boundedbuf;
+
+coordinator BoundedBuffer, {
+
+  selfex {put; take}
+  
+  mutex {put; take}
+  
+  condition empty:true, full:false; // coordination state with initial values
+  
+  guard { put } {
+    requires { !full } // pre-condition; wait if false
+    on_exit {
+      // as soon as put finishes, change state accordingly
+      if (empty)
+        empty = false;
+      if (usedSlots == size)
+        full = true;
+    }
+  }
+  
+  guard { take } {
+    requires { !empty } // pre-condition; wait if false
+    on_exit {
+      // as soon as take finishes, change state accordingly
+      if (full)
+        full = false;
+      if (usedSlots == 0)
+        empty = true;
+    }
+  }
+}

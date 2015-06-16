@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="popart" basedir="." default="compile">
+
+	<!-- ====== bunch of properties ====== -->
+
+	<!-- input directories -->
+	<property name="src.dir" value="src"/>
+	<property name="lib.dir" value="lib"/>
+	<!-- output directories -->
+	<property name="classes.dir" value="bin"/>
+	<property name="dist.dir" value="dist"/>
+	<property name="reports.dir" value="reports"/>
+	<property name="groovy.src.dir" value="groovy-src-generated"/>
+	<property name="groovy.classes.dir" value="groovy-bin"/>
+
+	<!-- ====== bunch of paths ====== -->
+
+	<path id="groovy-jar" location="${lib.dir}/groovy-all-1.7.10.jar"/>
+	<path id="junit-jar" location="${lib.dir}/junit-4.5.jar"/>
+	<path id="third-party-jars">
+		<path refid="groovy-jar"/>
+		<path refid="junit-jar"/>
+		<pathelement location="${lib.dir}/javalogo.jar"/>
+		<pathelement location="${lib.dir}/aspectjrt.jar"/>
+		<pathelement location="${lib.dir}/GroboTestingJUnit-1.2.1-core.jar"/>
+		<pathelement location="${lib.dir}/log4j-1.2.8.jar"/>
+		<pathelement location="${lib.dir}/derby-10.6.1.0.jar"/>
+		<pathelement location="${lib.dir}/wsdl4j.jar"/>
+		<pathelement location="${lib.dir}/JAXB2_20110601.jar"/>
+		<pathelement location="${lib.dir}/cassandra-driver-core-2.0.0.jar"/>
+		<pathelement location="${lib.dir}/guava-16.0.1.jar"/>
+		<pathelement location="${lib.dir}/slf4j-api-1.7.5.jar"/>
+		<pathelement location="${lib.dir}/netty-3.9.0.Final.jar"/>
+		<pathelement location="${lib.dir}/metrics-core-3.0.2.jar"/>
+	</path>
+	<path id="tests-classpath">
+		<path refid="third-party-jars"/>
+		<pathelement path="${classes.dir}"/>
+	</path>
+
+	<!-- ====== tasks imports of groovy, aspectj and junit ====== -->
+
+	<taskdef name="groovyc"	classname="org.codehaus.groovy.ant.Groovyc" classpathref="groovy-jar"/>
+
+	<taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties" classpath="${lib.dir}/aspectjtools.jar"/>
+
+	<taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask" classpathref="junit-jar"/>
+
+	<!-- ====== clean, build and dist tasks ====== -->
+	
+	<target name="clean" description="Delete all generated files">
+		<delete dir="${classes.dir}" failonerror="false"/>
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<delete dir="${dist.dir}" failonerror="false"/>
+		<delete dir="${groovy.src.dir}" failonerror="false"/>
+		<delete dir="${groovy.classes.dir}" failonerror="false"/>
+	</target>
+
+	<target name="compile" description="Compiles the Project" depends="">
+		<mkdir dir="${classes.dir}"/>
+		<groovyc srcdir="${src.dir}" destdir="${classes.dir}" verbose="false">
+			<classpath refid="third-party-jars"/>
+			<javac source="1.5" target="1.5" debug="off" verbose="false" />
+		</groovyc>
+		<iajc srcdir="${src.dir}" destdir="${classes.dir}" verbose="false" source="1.5" target="1.5">
+			<classpath>
+				<pathelement path="${classes.dir}"/>
+				<path refid="third-party-jars"/>
+			</classpath>
+		</iajc>
+	</target>
+
+	<target name="groovy-compile" description="Compiles the Project as Groovy classes" depends="">
+		<mkdir dir="${groovy.src.dir}"/>
+		<!-- copy all java classes as groovy classes -->
+		<copy todir="${groovy.src.dir}">
+			<!-- base code -->
+			<fileset dir="${src.dir}">
+				<include name="**/*.java"/>
+				<exclude name="de/tud/stg/tests/**/*.java"/>
+			</fileset>
+			<!-- additional tests -->
+			<fileset dir="${src.dir}">
+				<include name="de/tud/stg/tests/instrumentation/core/**/*.java"/>
+				<include name="de/tud/stg/tests/instrumentation/**/*Victim*.java"/>
+				<include name="de/tud/stg/tests/interactions/popart/itd/**/*.java"/>
+			</fileset>
+			<globmapper from="*.java" to="*.groovy"/>
+		</copy>
+		<!-- copy all groovy classes -->
+		<copy todir="${groovy.src.dir}">
+			<!-- base code -->
+			<fileset dir="${src.dir}">
+				<include name="**/*.groovy"/>
+				<exclude name="de/tud/stg/tests/**"/>
+			</fileset>
+			<!-- additional tests -->
+			<fileset dir="${src.dir}">
+				<include name="de/tud/stg/tests/instrumentation/core/**/*.groovy"/>
+				<include name="de/tud/stg/tests/instrumentation/**/*Victim*.groovy"/>
+				<include name="de/tud/stg/tests/interactions/popart/itd/**/*.groovy"/>
+			</fileset>
+		</copy>
+		
+		<mkdir dir="${groovy.classes.dir}"/>
+		<groovyc srcdir="${groovy.src.dir}" destdir="${groovy.classes.dir}" verbose="false">
+			<classpath refid="third-party-jars"/>
+			<javac source="1.5" target="1.5" debug="off" verbose="false" />
+		</groovyc>
+	</target>
+
+	<target name="jar" description="Compiles and creates the distribution jar." depends="compile">
+		<tstamp/>
+		<mkdir dir="${dist.dir}"/>
+		<jar destfile="${dist.dir}/${ant.project.name}-${DSTAMP}.jar" basedir="${classes.dir}">
+			<fileset dir="${src.dir}"/>
+		</jar>
+	</target>
+
+	<target name="groovy-jar" description="Compiles and creates the groovy distribution jar." depends="compile">
+		<tstamp/>
+		<mkdir dir="${dist.dir}"/>
+		<jar destfile="${dist.dir}/${ant.project.name}-groovy-${DSTAMP}.jar" basedir="${classes.dir}">
+			<fileset dir="${groovy.src.dir}"/>
+		</jar>
+	</target>
+
+	<!-- ====== test tasks ====== -->
+
+	<target name="test" description="Invokes all regression tests." depends="compile">
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+
+			<!-- various tests (Interpreter+Logo: Tom, Instrumentation: Joscha (formerly Jan), Inter-type declarations: Joscha) -->
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/instrumentation/core/BaseTests.java"/>
+					<include name="de/tud/stg/tests/interactions/popart/itd/InterTypeDeclarationTestSuite.java"/>
+					<include name="de/tud/stg/tests/dslsupport/TestInterpreter.java"/>
+					<!--include name="de/tud/stg/tests/dslsupport/logo/TestSuiteLogo.java"/ --> <!-- already tested in tyger's eye --> 
+				</fileset>
+			</batchtest>
+
+			<!-- Behavioral aspect interaction tests (Olga) -->
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/interactions/popart/precedence/TestSuiteGroovy.java"/>
+					<include name="de/tud/stg/tests/interactions/popart/rules/TestSuiteGroovyRules.java"/>
+					<include name="de/tud/stg/tests/interactions/popart/priority/TestSuitePriority.java"/>
+				</fileset>
+			</batchtest>
+
+			<!-- COOL, Caching and Zipping tests (Oliver) -->
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/popart/extensions/cool/selfex/AllSelfexTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/cool/mutex/AllMutexTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/cool/guard/AllGuardTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/cool/boundedbuf/BoundedBufferTest.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/cool/shape/ShapeTest.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/caching/fib/AllFibTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/zip/AllZipTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/coolcaching/AllCoCaTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/coolcachingzip/AllCoCaZipTests.java"/>
+					<include name="de/tud/stg/tests/popart/extensions/coolcachingzip/db/CoCaZipDBTest.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="test-regression" description="Invokes all regression tests." depends="compile">
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/RegressionTests.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+	
+	<target name="non-running-test" description="Invokes all regression tests that current do not run correctly." depends="compile">
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+			
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<!--
+						If you have non running tests, add them here like this:
+						<include name="de/tud/stg/tests/your/test/package/YourTestClass.java"/>
+					-->
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="single-test" description="Invokes one particular test case." depends="compile">
+        <echo message="${test.class}"/>
+		<fail unless="test.class">You must specify property test.class to run the single-test task! Run ant with parameter: -Dtest.class=your.test.package.YourTestClass</fail>
+		<available property="test.class.exists" classname="${test.class}" classpathref="tests-classpath"/>
+		<fail unless="test.class.exists">The specified test.class (${test.class}) does not exist.</fail>
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+			<test name="${test.class}" todir="${reports.dir}"/>
+		</junit>
+	</target>
+	
+	<target name="sql-tests" description="Invokes all tests for the AO4SQL project" depends="compile">
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="no" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/dslsupport/sql/SQLTestSuite.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+	
+	<target name="cql-tests" description="Invokes all tests for the AO4CQL project" depends="compile">
+		<delete dir="${reports.dir}" failonerror="false"/>
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="no" showoutput="yes">
+			<classpath refid="tests-classpath"/>
+			<formatter type="xml"/>
+
+			<batchtest fork="yes" todir="${reports.dir}">
+				<fileset dir="${src.dir}">
+					<include name="de/tud/stg/tests/dslsupport/cql/CQLTestSuite.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+	
+	<!-- ====== other stuff ====== -->
+
+	<target name="benchmark" description="Run the benchmarks of the Groovy-MOP-Instrumentation. This may take many hours!" depends="compile">
+		<java classname="de.tud.stg.tests.instrumentation.benchmark.BenchmarkStarter" fork="true">
+			<assertions>
+				<enable/>
+			</assertions>
+			<classpath>
+				<pathelement path="${classes.dir}"/>
+				<path refid="groovy-jar"/>
+			</classpath>
+		</java>
+	</target>
+</project>

@@ -1,0 +1,9 @@
+
+package de.tud.stg.tests.popart.extensions.cool;
+
+/**
+ * @author Oliver Rehor
+ **/
+ per_class_coordinator ([Book]) {
+  mutex (["changeTitle.*", "doSth.*"]);
+}

@@ -1,0 +1,24 @@
+package de.tud.stg.tests.popart.extensions.coolcaching;
+
+/*
+per_class_coordinator Test1Victim, {
+  selfex { addLine }
+  mutex  { addLine; wordCount }
+}
+
+per_class_cache Test1Victim, {
+  memoize ("wordCount") {
+    untilCalling("addLine");
+  }
+}
+*/
+
+per_class_cachingcoordinator Test1Victim, {
+  selfex { addLine }
+  mutex  { addLine; wordCount }
+  
+  memoize "wordCount", {
+    invalidated_by_assigning "content"
+    or_calling "addLine";
+  }
+}

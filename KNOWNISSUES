@@ -1,0 +1,17 @@
+
+Problem: POPART does not compile with ordinary Java/Eclipse.
+This is because of a Groovy problem, with cyclic dependencies with Java classes. 
+Groovy must be compiled before Java, but Java needs some Groovy classes.
+
+Solution: Use Ant build process.
+
+---
+
+Problem: Java out of memory error during compilation 
+
+Solution: One has to adjust the memory available for compilation: 
+1) Window -> preferences -> java -> installed JREs 
+2) Select the (default) VM used executing Ant from the list. 
+3) Press "Edit..." and set "Default arguments" to -Xmx256M
+
+--- 

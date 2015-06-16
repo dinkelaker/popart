@@ -1,0 +1,7 @@
+package de.tud.stg.tests.popart.extensions.cool.shape;
+
+coordinator MyShape, {
+  selfex {adjustLocation; adjustDimensions};
+  mutex {adjustLocation; x; y};
+  mutex {adjustDimensions; width; height};
+}

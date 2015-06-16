@@ -1,0 +1,30 @@
+package de.tud.stg.tests.popart.extensions.cool.guard;
+
+per_class_coordinator ([CoordinatorStateVictim]) {
+
+  condition cv:true;
+  condition av:false;
+  
+  var v:0;
+  
+  guard (["changeTitle"]) { 
+    requires { cv }
+    on_exit {
+      cv = false;
+      if (v == 1)
+        av = true;
+    }
+  }
+  
+  guard (["getTitle"]) { 
+    requires { !cv }
+    on_exit {
+      cv = true;
+      v = 1;
+    }
+  }
+  
+  guard (["setTitle"]) { 
+    requires { av }
+  }
+}

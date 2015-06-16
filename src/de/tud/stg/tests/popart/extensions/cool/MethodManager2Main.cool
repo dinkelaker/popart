@@ -1,0 +1,32 @@
+package de.tud.stg.tests.popart.extensions.cool;
+
+/**
+ * @author Oliver Rehor
+ **/
+per_class_coordinator ([Book]) {
+  
+  mutex (["changeTitle.*", "title.*"]);
+  
+  condition (cv:true);
+  
+  methodManager (["changeTitle.*"], { 
+    requires { cv }; 
+    on_exit {
+      //anUndefinedVar = false;
+      //cv = "badType";
+      cv = false;
+    }
+  });
+  methodManager (["title.*"], { 
+    requires { cv }; 
+    on_exit {
+      cv = false;
+    }
+  });
+  methodManager (["getTitle.*"], { 
+    requires { !cv };
+    on_exit {
+      cv = true;
+    }
+  });
+}
